@@ -1,0 +1,171 @@
+# go-test.yml — Reusable Go test workflow for hairglasses-studio
+#
+# Callable from any org repo:
+#   jobs:
+#     test:
+#       uses: hairglasses-studio/.github/.github/workflows/go-test.yml@main
+#       with:
+#         go-version: "1.26.1"
+#         test-flags: "-count=1 -race"
+#         coverage-threshold: 50
+#
+# Canonical source: hairglasses-studio/.github/workflows/go-test.yml (reference template)
+# Deployed here so GitHub Actions can resolve workflow_call references.
+#
+# Source: ADR-0011, cross-repo-testing-hub.md
+
+name: Go Test
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "Go version to install"
+        required: false
+        type: string
+        default: "1.26.1"
+      test-flags:
+        description: "Flags passed to go test (via gotestsum)"
+        required: false
+        type: string
+        default: "-count=1 -race"
+      coverage-threshold:
+        description: "Minimum coverage percentage (0 to disable)"
+        required: false
+        type: number
+        default: 0
+      build-check:
+        description: "Run go build ./... before tests"
+        required: false
+        type: boolean
+        default: true
+      lint-check:
+        description: "Run go vet ./... before tests"
+        required: false
+        type: boolean
+        default: true
+      mod-tidy-check:
+        description: "Verify go.mod and go.sum are tidy"
+        required: false
+        type: boolean
+        default: true
+      packages:
+        description: "Go packages to test"
+        required: false
+        type: string
+        default: "./..."
+      timeout:
+        description: "Test timeout per package"
+        required: false
+        type: string
+        default: "10m"
+
+# Cancel in-progress runs for the same workflow+ref to save minutes.
+# The caller can override this with their own concurrency group.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: "Go ${{ inputs.go-version }}"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Verify go.mod tidy
+        if: inputs.mod-tidy-check
+        run: |
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::go.mod or go.sum is not tidy. Run 'go mod tidy' and commit."
+            exit 1
+          fi
+
+      - name: Go vet
+        if: inputs.lint-check
+        run: go vet ${{ inputs.packages }}
+
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@latest
+
+      - name: Run tests
+        run: |
+          mkdir -p .test-reports
+          gotestsum \
+            --junitfile .test-reports/junit.xml \
+            --jsonfile .test-reports/results.json \
+            --format pkgname \
+            -- ${{ inputs.packages }} \
+            ${{ inputs.test-flags }} \
+            -timeout ${{ inputs.timeout }} \
+            -coverprofile=.test-reports/coverage.out
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f .test-reports/coverage.out ]; then
+            echo "### Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            go tool cover -func=.test-reports/coverage.out | tail -20 >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Coverage threshold check
+        if: inputs.coverage-threshold > 0
+        run: |
+          if [ ! -f .test-reports/coverage.out ]; then
+            echo "::error::No coverage file found"
+            exit 1
+          fi
+          COVERAGE=$(go tool cover -func=.test-reports/coverage.out | tail -1 | awk '{print $3}' | tr -d '%')
+          echo "Coverage: ${COVERAGE}%"
+          if [ "$(echo "$COVERAGE < ${{ inputs.coverage-threshold }}" | bc -l)" -eq 1 ]; then
+            echo "::error::Coverage ${COVERAGE}% is below threshold ${{ inputs.coverage-threshold }}%"
+            exit 1
+          fi
+          echo "Coverage ${COVERAGE}% meets threshold ${{ inputs.coverage-threshold }}%"
+
+      - name: Test summary
+        uses: test-summary/action@v2
+        if: always()
+        with:
+          paths: .test-reports/junit.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.event.repository.name }}-go${{ inputs.go-version }}
+          path: |
+            .test-reports/junit.xml
+            .test-reports/results.json
+            .test-reports/coverage.out
+          retention-days: 30
+
+      - name: Build check
+        if: inputs.build-check
+        run: go build ${{ inputs.packages }}
+
+      - name: Slowest tests
+        if: always()
+        run: |
+          if [ -f .test-reports/results.json ]; then
+            echo "### Slowest Tests" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            gotestsum tool slowest \
+              --jsonfile .test-reports/results.json \
+              --threshold 1s 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || echo "No slow tests found" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

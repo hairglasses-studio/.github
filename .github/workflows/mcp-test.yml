@@ -1,0 +1,257 @@
+# mcp-test.yml — Reusable MCP server test workflow for hairglasses-studio
+#
+# Extends go-test with CGO support (SQLite), mcptest integration tests,
+# and tool count verification.
+#
+# Callable from any org MCP server repo:
+#   jobs:
+#     test:
+#       uses: hairglasses-studio/.github/.github/workflows/mcp-test.yml@main
+#       with:
+#         go-version: "1.26.1"
+#         expected-tool-count: 86
+#         cgo-enabled: true
+#
+# Canonical source: hairglasses-studio/.github/workflows/mcp-test.yml (reference template)
+# Deployed here so GitHub Actions can resolve workflow_call references.
+#
+# Source: ADR-0011, cross-repo-testing-hub.md, mcptest patterns from mcpkit
+
+name: MCP Server Test
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "Go version to install"
+        required: false
+        type: string
+        default: "1.26.1"
+      test-flags:
+        description: "Flags passed to go test (via gotestsum)"
+        required: false
+        type: string
+        default: "-count=1 -race"
+      coverage-threshold:
+        description: "Minimum coverage percentage (0 to disable)"
+        required: false
+        type: number
+        default: 0
+      packages:
+        description: "Go packages to test"
+        required: false
+        type: string
+        default: "./..."
+      timeout:
+        description: "Test timeout per package"
+        required: false
+        type: string
+        default: "10m"
+      expected-tool-count:
+        description: "Expected number of MCP tools registered (0 to skip verification)"
+        required: false
+        type: number
+        default: 0
+      cgo-enabled:
+        description: "Enable CGO (required for SQLite repos like docs-mcp, dotfiles-mcp)"
+        required: false
+        type: boolean
+        default: false
+      cgo-cflags:
+        description: "CGO_CFLAGS value (e.g., -DSQLITE_ENABLE_FTS5)"
+        required: false
+        type: string
+        default: ""
+      cgo-ldflags:
+        description: "CGO_LDFLAGS value (e.g., -lm)"
+        required: false
+        type: string
+        default: ""
+      build-binary:
+        description: "Binary name to build (empty for go build ./...)"
+        required: false
+        type: string
+        default: ""
+      integration-test-tags:
+        description: "Build tags for integration tests (e.g., integration)"
+        required: false
+        type: string
+        default: ""
+      install-system-deps:
+        description: "apt packages to install (space-separated, e.g., tmux libsqlite3-dev)"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: "MCP Test (Go ${{ inputs.go-version }})"
+    runs-on: ubuntu-latest
+
+    env:
+      CGO_ENABLED: ${{ inputs.cgo-enabled && '1' || '0' }}
+      CGO_CFLAGS: ${{ inputs.cgo-cflags }}
+      CGO_LDFLAGS: ${{ inputs.cgo-ldflags }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        if: inputs.install-system-deps != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ inputs.install-system-deps }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Verify go.mod tidy
+        run: |
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::go.mod or go.sum is not tidy. Run 'go mod tidy' and commit."
+            exit 1
+          fi
+
+      - name: Go vet
+        run: go vet ${{ inputs.packages }}
+
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@latest
+
+      # -- Unit tests --
+      - name: Run unit tests
+        run: |
+          mkdir -p .test-reports
+          gotestsum \
+            --junitfile .test-reports/junit.xml \
+            --jsonfile .test-reports/results.json \
+            --format pkgname \
+            -- ${{ inputs.packages }} \
+            ${{ inputs.test-flags }} \
+            -timeout ${{ inputs.timeout }} \
+            -coverprofile=.test-reports/coverage.out
+
+      # -- Integration tests (mcptest) --
+      - name: Run integration tests
+        if: inputs.integration-test-tags != ''
+        run: |
+          gotestsum \
+            --junitfile .test-reports/junit-integration.xml \
+            --jsonfile .test-reports/results-integration.json \
+            --format pkgname \
+            -- ${{ inputs.packages }} \
+            -tags=${{ inputs.integration-test-tags }} \
+            ${{ inputs.test-flags }} \
+            -timeout ${{ inputs.timeout }}
+
+      # -- MCP tool count verification --
+      - name: Verify MCP tool count
+        if: inputs.expected-tool-count > 0
+        run: |
+          echo "### MCP Tool Count Verification" >> "$GITHUB_STEP_SUMMARY"
+
+          # Strategy: look for tool count in test output, or run a dedicated check.
+          # The mcptest.AssertToolCount pattern writes tool count to test output.
+          ACTUAL_COUNT=0
+
+          # Method 1: Check test JSON output for tool count assertions
+          if [ -f .test-reports/results.json ]; then
+            # Look for "registered N tools" or "tool_count: N" patterns in test output
+            ACTUAL_COUNT=$(grep -oP 'registered \K\d+(?= tools)' .test-reports/results.json | tail -1 || echo "0")
+          fi
+
+          # Method 2: If no count found in test output, try to count from source
+          if [ "$ACTUAL_COUNT" = "0" ] || [ -z "$ACTUAL_COUNT" ]; then
+            # Count RegisterModule calls as a heuristic
+            ACTUAL_COUNT=$(grep -r 'RegisterModule\|RegisterTool' --include='*.go' -l | wc -l || echo "0")
+            echo "Tool count estimated from source: $ACTUAL_COUNT (heuristic)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          EXPECTED=${{ inputs.expected-tool-count }}
+          echo "Expected: $EXPECTED tools" >> "$GITHUB_STEP_SUMMARY"
+          echo "Found: $ACTUAL_COUNT" >> "$GITHUB_STEP_SUMMARY"
+
+          # Warn but do not fail -- tool count verification is informational until
+          # mcptest.AssertToolCount is adopted in all MCP servers.
+          if [ "$ACTUAL_COUNT" != "0" ] && [ "$ACTUAL_COUNT" != "$EXPECTED" ]; then
+            echo "::warning::MCP tool count mismatch: expected $EXPECTED, found $ACTUAL_COUNT"
+          fi
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f .test-reports/coverage.out ]; then
+            echo "### Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            go tool cover -func=.test-reports/coverage.out | tail -20 >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Coverage threshold check
+        if: inputs.coverage-threshold > 0
+        run: |
+          if [ ! -f .test-reports/coverage.out ]; then
+            echo "::error::No coverage file found"
+            exit 1
+          fi
+          COVERAGE=$(go tool cover -func=.test-reports/coverage.out | tail -1 | awk '{print $3}' | tr -d '%')
+          echo "Coverage: ${COVERAGE}%"
+          if [ "$(echo "$COVERAGE < ${{ inputs.coverage-threshold }}" | bc -l)" -eq 1 ]; then
+            echo "::error::Coverage ${COVERAGE}% is below threshold ${{ inputs.coverage-threshold }}%"
+            exit 1
+          fi
+          echo "Coverage ${COVERAGE}% meets threshold ${{ inputs.coverage-threshold }}%"
+
+      - name: Test summary
+        uses: test-summary/action@v2
+        if: always()
+        with:
+          paths: |
+            .test-reports/junit.xml
+            .test-reports/junit-integration.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mcp-test-results-${{ github.event.repository.name }}-go${{ inputs.go-version }}
+          path: |
+            .test-reports/junit.xml
+            .test-reports/junit-integration.xml
+            .test-reports/results.json
+            .test-reports/results-integration.json
+            .test-reports/coverage.out
+          retention-days: 30
+
+      # -- Build verification --
+      - name: Build binary
+        if: inputs.build-binary != ''
+        run: go build -o .test-reports/${{ inputs.build-binary }} ./cmd/${{ inputs.build-binary }}/
+
+      - name: Build all
+        if: inputs.build-binary == ''
+        run: go build ${{ inputs.packages }}
+
+      - name: Slowest tests
+        if: always()
+        run: |
+          if [ -f .test-reports/results.json ]; then
+            echo "### Slowest Tests" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            gotestsum tool slowest \
+              --jsonfile .test-reports/results.json \
+              --threshold 1s 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || echo "No slow tests found" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
