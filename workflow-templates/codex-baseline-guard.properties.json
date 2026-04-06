@@ -1,0 +1,6 @@
+{
+  "name": "Codex Baseline Guard",
+  "description": "Validate the committed Codex instruction, config, and workflow baseline on pull requests and pushes",
+  "iconName": "check-circle",
+  "categories": ["Automation", "AI"]
+}
