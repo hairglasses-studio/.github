@@ -1,0 +1,28 @@
+name: MCP Mirror Parity
+
+on:
+  workflow_call:
+    inputs:
+      canonical-path:
+        description: "Path inside hairglasses-studio/dotfiles that contains the canonical MCP source tree"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout canonical dotfiles repo
+        uses: actions/checkout@v6
+        with:
+          repository: hairglasses-studio/dotfiles
+          path: .canonical
+      - name: Verify mirror parity
+        run: |
+          bash .canonical/scripts/mcp-mirror.sh check \
+            --canonical ".canonical/${{ inputs.canonical-path }}" \
+            --mirror "$GITHUB_WORKSPACE"

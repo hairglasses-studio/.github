@@ -1,0 +1,162 @@
+name: Python Test
+
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        description: "JSON array of Python versions"
+        required: false
+        type: string
+        default: "[\"3.11\"]"
+      os-matrix:
+        description: "JSON array of GitHub runner labels"
+        required: false
+        type: string
+        default: "[\"ubuntu-latest\"]"
+      working-directory:
+        description: "Working directory for commands"
+        required: false
+        type: string
+        default: "."
+      install-command:
+        description: "Command used to install project dependencies"
+        required: false
+        type: string
+        default: "python -m pip install --upgrade pip && pip install -e \".[dev,test]\""
+      lint-command:
+        description: "Optional lint command"
+        required: false
+        type: string
+        default: ""
+      typecheck-command:
+        description: "Optional typecheck command"
+        required: false
+        type: string
+        default: ""
+      test-command:
+        description: "Command used to run tests"
+        required: false
+        type: string
+        default: "pytest -v"
+      security-command:
+        description: "Optional security command"
+        required: false
+        type: string
+        default: ""
+      build-command:
+        description: "Optional build command"
+        required: false
+        type: string
+        default: ""
+      install-system-deps-linux:
+        description: "Optional apt packages for Linux"
+        required: false
+        type: string
+        default: ""
+      install-system-deps-macos:
+        description: "Optional brew packages for macOS"
+        required: false
+        type: string
+        default: ""
+      coverage-path:
+        description: "Optional coverage artifact path"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    if: inputs.lint-command != ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: ${{ inputs.install-command }}
+      - name: Lint
+        run: ${{ inputs.lint-command }}
+
+  test:
+    runs-on: ${{ matrix.os }}
+    needs: [lint]
+    if: always() && !cancelled() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.os-matrix) }}
+        python-version: ${{ fromJSON(inputs.python-versions) }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install Linux system packages
+        if: runner.os == 'Linux' && inputs.install-system-deps-linux != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ inputs.install-system-deps-linux }}
+      - name: Install macOS system packages
+        if: runner.os == 'macOS' && inputs.install-system-deps-macos != ''
+        run: brew install ${{ inputs.install-system-deps-macos }}
+      - name: Install dependencies
+        run: ${{ inputs.install-command }}
+      - name: Typecheck
+        if: inputs.typecheck-command != ''
+        run: ${{ inputs.typecheck-command }}
+      - name: Test
+        run: ${{ inputs.test-command }}
+      - name: Upload coverage artifact
+        if: inputs.coverage-path != '' && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage-${{ github.event.repository.name }}-py${{ matrix.python-version }}
+          path: ${{ inputs.working-directory }}/${{ inputs.coverage-path }}
+          retention-days: 14
+
+  security:
+    if: inputs.security-command != ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: ${{ inputs.install-command }}
+      - name: Security
+        run: ${{ inputs.security-command }}
+
+  build:
+    if: inputs.build-command != ''
+    runs-on: ubuntu-latest
+    needs: [test]
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: ${{ inputs.install-command }}
+      - name: Build
+        run: ${{ inputs.build-command }}

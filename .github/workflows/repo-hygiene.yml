@@ -1,0 +1,59 @@
+name: Repo Hygiene
+
+on:
+  workflow_call:
+    inputs:
+      require-roadmap:
+        description: "Require ROADMAP.md"
+        required: false
+        type: boolean
+        default: false
+      require-makefile:
+        description: "Require Makefile"
+        required: false
+        type: boolean
+        default: false
+      require-codeowners:
+        description: "Require CODEOWNERS"
+        required: false
+        type: boolean
+        default: true
+      max-root-docs:
+        description: "Maximum allowed root markdown files"
+        required: false
+        type: number
+        default: 8
+      allow-extra-docs:
+        description: "Comma-separated extra root markdown files allowed by name"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout org platform repo
+        uses: actions/checkout@v6
+        with:
+          repository: hairglasses-studio/.github
+          path: .org-platform
+      - name: Run hygiene checks
+        run: |
+          args=()
+          if [ "${{ inputs.require-roadmap }}" = "true" ]; then
+            args+=("--require-roadmap")
+          fi
+          if [ "${{ inputs.require-makefile }}" = "true" ]; then
+            args+=("--require-makefile")
+          fi
+          if [ "${{ inputs.require-codeowners }}" = "false" ]; then
+            args+=("--no-require-codeowners")
+          fi
+          args+=("--max-root-docs" "${{ inputs.max-root-docs }}")
+          args+=("--allow-extra-docs" "${{ inputs.allow-extra-docs }}")
+          bash .org-platform/scripts/check-repo-hygiene.sh "${args[@]}"

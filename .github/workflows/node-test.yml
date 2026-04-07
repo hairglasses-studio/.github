@@ -1,0 +1,77 @@
+name: Node Test
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "Working directory for commands"
+        required: false
+        type: string
+        default: "."
+      node-version:
+        description: "Node version when not using node-version-file"
+        required: false
+        type: string
+        default: "22"
+      node-version-file:
+        description: "Optional node version file"
+        required: false
+        type: string
+        default: ""
+      install-command:
+        description: "Install command"
+        required: false
+        type: string
+        default: "npm ci"
+      lint-command:
+        description: "Optional lint command"
+        required: false
+        type: string
+        default: ""
+      test-command:
+        description: "Optional test command"
+        required: false
+        type: string
+        default: ""
+      build-command:
+        description: "Optional build command"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node from file
+        if: inputs.node-version-file != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ inputs.node-version-file }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+      - name: Setup Node from version
+        if: inputs.node-version-file == ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+      - name: Install dependencies
+        run: ${{ inputs.install-command }}
+      - name: Lint
+        if: inputs.lint-command != ''
+        run: ${{ inputs.lint-command }}
+      - name: Test
+        if: inputs.test-command != ''
+        run: ${{ inputs.test-command }}
+      - name: Build
+        if: inputs.build-command != ''
+        run: ${{ inputs.build-command }}
