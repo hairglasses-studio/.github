@@ -1,0 +1,17 @@
+name: Codex MCP Inventory
+
+on:
+  workflow_dispatch:
+    inputs:
+      inventory_scope:
+        description: "Which MCP surfaces Codex should inventory"
+        required: false
+        default: "Repo-local `.mcp.json`, Codex MCP config, and documented MCP install paths"
+        type: string
+
+jobs:
+  codex-mcp-inventory:
+    uses: hairglasses-studio/.github/.github/workflows/codex-mcp-inventory.yml@main
+    with:
+      inventory_scope: ${{ github.event.inputs.inventory_scope }}
+    secrets: inherit

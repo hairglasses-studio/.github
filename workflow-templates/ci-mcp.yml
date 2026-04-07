@@ -1,0 +1,11 @@
+name: MCP CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    uses: hairglasses-studio/.github/.github/workflows/mcp-test.yml@main

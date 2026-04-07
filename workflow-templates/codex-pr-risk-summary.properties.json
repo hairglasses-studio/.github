@@ -1,0 +1,6 @@
+{
+  "name": "Codex PR Risk Summary",
+  "description": "Generate a structured Codex risk summary artifact for a pull request",
+  "iconName": "alert",
+  "categories": ["Automation", "AI"]
+}

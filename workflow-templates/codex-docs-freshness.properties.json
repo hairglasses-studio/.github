@@ -1,0 +1,6 @@
+{
+  "name": "Codex Docs Freshness",
+  "description": "Audit checked-in docs for stale commands, paths, and setup guidance",
+  "iconName": "book",
+  "categories": ["Documentation", "AI"]
+}

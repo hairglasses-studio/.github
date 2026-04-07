@@ -1,0 +1,147 @@
+{
+  "generated_from": "docs/inventory/repo-catalog.json",
+  "generated_date": "2026-04-06",
+  "organization": "hairglasses-studio",
+  "repos": [
+    {
+      "name": ".github",
+      "ci_profile": "org-platform",
+      "visibility": "PUBLIC",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "docs",
+      "ci_profile": "mcp-test",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "dotfiles",
+      "ci_profile": "repo-hygiene",
+      "visibility": "PUBLIC",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "mcpkit",
+      "ci_profile": "go-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "ralphglasses",
+      "ci_profile": "go-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "art-mcp",
+      "ci_profile": "repo-hygiene",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "claudekit",
+      "ci_profile": "go-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "cr8-cli",
+      "ci_profile": "python-test",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "mesmer",
+      "ci_profile": "go-test",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "romhub",
+      "ci_profile": "node-test",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "dotfiles-work",
+      "ci_profile": "repo-hygiene",
+      "visibility": "PRIVATE",
+      "lifecycle": "never-publish",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "hg-android",
+      "ci_profile": "repo-hygiene",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "hg-pi",
+      "ci_profile": "repo-hygiene",
+      "visibility": "PRIVATE",
+      "lifecycle": "active",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "jobb",
+      "ci_profile": "go-test",
+      "visibility": "PRIVATE",
+      "lifecycle": "never-publish",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "shielddd",
+      "ci_profile": "go-test",
+      "visibility": "PRIVATE",
+      "lifecycle": "never-publish",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "dotfiles-mcp",
+      "ci_profile": "mcp-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "publish-mirror",
+      "source_of_truth": "dotfiles/mcp/dotfiles-mcp"
+    },
+    {
+      "name": "process-mcp",
+      "ci_profile": "mcp-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "publish-mirror",
+      "source_of_truth": "dotfiles/mcp/process-mcp"
+    },
+    {
+      "name": "prompt-improver",
+      "ci_profile": "go-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "maintenance-only",
+      "source_of_truth": "self"
+    },
+    {
+      "name": "systemd-mcp",
+      "ci_profile": "mcp-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "publish-mirror",
+      "source_of_truth": "dotfiles/mcp/systemd-mcp"
+    },
+    {
+      "name": "tmux-mcp",
+      "ci_profile": "mcp-test",
+      "visibility": "PUBLIC",
+      "lifecycle": "publish-mirror",
+      "source_of_truth": "dotfiles/mcp/tmux-mcp"
+    }
+  ]
+}

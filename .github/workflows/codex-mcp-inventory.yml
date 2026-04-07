@@ -1,0 +1,114 @@
+name: Codex MCP Inventory
+
+on:
+  workflow_call:
+    inputs:
+      inventory_scope:
+        description: "Which MCP surfaces Codex should inventory"
+        required: false
+        type: string
+        default: "Repo-local `.mcp.json`, Codex MCP config, and documented MCP install paths"
+  workflow_dispatch:
+    inputs:
+      inventory_scope:
+        description: "Which MCP surfaces Codex should inventory"
+        required: false
+        default: "Repo-local `.mcp.json`, Codex MCP config, and documented MCP install paths"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  codex-mcp-inventory:
+    runs-on: ubuntu-latest
+    env:
+      INVENTORY_SCOPE: ${{ inputs.inventory_scope || github.event.inputs.inventory_scope }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Checkout org platform repo
+        uses: actions/checkout@v6
+        with:
+          repository: hairglasses-studio/.github
+          path: .org-platform
+
+      - name: Build prompt
+        id: build_prompt
+        shell: bash
+        env:
+          PROMPT_FILE: .org-platform/.github/codex/prompts/codex-mcp-inventory.md
+        run: |
+          {
+            echo "prompt<<'EOF'"
+            cat "$PROMPT_FILE"
+            printf '\n\nInventory scope: %s\n' "$INVENTORY_SCOPE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run Codex MCP inventory
+        id: run_codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: read-only
+          safety-strategy: read-only
+          output-schema: |
+            {
+              "type": "object",
+              "required": ["summary", "scope", "servers", "gaps", "follow_up"],
+              "additionalProperties": false,
+              "properties": {
+                "summary": { "type": "string" },
+                "scope": { "type": "string" },
+                "servers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "source", "config_path", "notes"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": { "type": "string" },
+                      "source": { "type": "string" },
+                      "transport": { "type": "string" },
+                      "config_path": { "type": "string" },
+                      "notes": { "type": "string" }
+                    }
+                  }
+                },
+                "gaps": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "follow_up": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          prompt: ${{ steps.build_prompt.outputs.prompt }}
+
+      - name: Save MCP inventory artifacts
+        env:
+          CODEX_FINAL_MESSAGE: ${{ steps.run_codex.outputs.final-message }}
+        run: |
+          printf '%s\n' "$CODEX_FINAL_MESSAGE" > codex-mcp-inventory.json
+          jq . codex-mcp-inventory.json >/dev/null
+          jq '{
+            summary,
+            scope,
+            server_count: (.servers | length),
+            servers,
+            gaps,
+            follow_up
+          }' codex-mcp-inventory.json > codex-mcp-inventory-summary.json
+
+      - name: Upload MCP inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-mcp-inventory
+          path: |
+            codex-mcp-inventory.json
+            codex-mcp-inventory-summary.json

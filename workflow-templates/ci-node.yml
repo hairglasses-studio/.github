@@ -1,0 +1,11 @@
+name: Node CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    uses: hairglasses-studio/.github/.github/workflows/node-test.yml@main

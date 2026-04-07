@@ -1,0 +1,6 @@
+{
+  "name": "Codex MCP Inventory",
+  "description": "Extract a structured MCP inventory artifact from a repository",
+  "iconName": "package-dependencies",
+  "categories": ["Automation", "AI"]
+}

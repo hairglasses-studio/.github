@@ -1,0 +1,6 @@
+{
+  "name": "Codex Release Notes",
+  "description": "Generate structured release notes artifacts from a git range",
+  "iconName": "tag",
+  "categories": ["Release", "AI"]
+}

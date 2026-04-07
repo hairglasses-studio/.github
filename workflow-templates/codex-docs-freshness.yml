@@ -1,0 +1,17 @@
+name: Codex Docs Freshness
+
+on:
+  workflow_dispatch:
+    inputs:
+      docs_scope:
+        description: "Which docs Codex should audit"
+        required: false
+        default: "Repository docs, setup guides, and user-facing automation docs"
+        type: string
+
+jobs:
+  codex-docs-freshness:
+    uses: hairglasses-studio/.github/.github/workflows/codex-docs-freshness.yml@main
+    with:
+      docs_scope: ${{ github.event.inputs.docs_scope }}
+    secrets: inherit
