@@ -48,6 +48,8 @@ require_file "LICENSE"
 require_file "AGENTS.md"
 require_file "CLAUDE.md"
 require_file "GEMINI.md"
+require_file ".claude/settings.json"
+require_file ".gemini/settings.json"
 require_dir ".github/workflows"
 
 if [[ "$require_roadmap" -eq 1 ]]; then
@@ -69,6 +71,31 @@ if git ls-files --error-unmatch coverage.out >/dev/null 2>&1; then
 fi
 if git ls-files --error-unmatch coverage.html >/dev/null 2>&1; then
   fail "coverage.html should not be committed"
+fi
+if git ls-files --error-unmatch CLAUDE.local.md >/dev/null 2>&1; then
+  fail "CLAUDE.local.md must remain untracked"
+fi
+if git ls-files --error-unmatch AGENTS.override.md >/dev/null 2>&1; then
+  fail "AGENTS.override.md must remain untracked unless a repo explicitly documents nested overrides"
+fi
+
+jq -e 'type == "object"' .claude/settings.json >/dev/null 2>&1 || \
+  fail ".claude/settings.json must be valid JSON"
+jq -e 'type == "object"' .gemini/settings.json >/dev/null 2>&1 || \
+  fail ".gemini/settings.json must be valid JSON"
+jq -e '(.context.fileName // []) | index("AGENTS.md") != null' .gemini/settings.json >/dev/null 2>&1 || \
+  fail ".gemini/settings.json must bridge AGENTS.md via context.fileName"
+
+if [[ -f ".mcp.json" ]]; then
+  active_mcp_servers="$(jq -r '(.mcpServers // {}) | if type != "object" then {} else . end | with_entries(select(.key | startswith("_") | not)) | length' .mcp.json)"
+  if [[ "$active_mcp_servers" -gt 0 ]]; then
+    jq -e '(.mcpServers // {}) | type == "object"' .claude/settings.json >/dev/null 2>&1 || \
+      fail ".claude/settings.json must expose repo MCP servers"
+    jq -e '(.mcpServers // {}) | type == "object"' .gemini/settings.json >/dev/null 2>&1 || \
+      fail ".gemini/settings.json must expose repo MCP servers"
+    jq -e '(.mcpServers // {}) | keys | all(test("^[a-z0-9]+(-[a-z0-9]+)*$"))' .gemini/settings.json >/dev/null 2>&1 || \
+      fail ".gemini/settings.json MCP server names must use kebab-case"
+  fi
 fi
 
 if [[ -d ".codex/agents" ]] && find .codex/agents -maxdepth 1 -type f -name '*.toml' | grep -q .; then
