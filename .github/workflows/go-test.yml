@@ -69,7 +69,7 @@ concurrency:
 jobs:
   test:
     name: "Go ${{ inputs.go-version }}"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
 
     steps:
       - name: Checkout

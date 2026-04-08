@@ -70,7 +70,7 @@ permissions:
 jobs:
   lint:
     if: inputs.lint-command != ''
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
@@ -86,7 +86,7 @@ jobs:
         run: ${{ inputs.lint-command }}
 
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, archglasses, optimized]
     needs: [lint]
     if: always() && !cancelled() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
     strategy:
@@ -128,7 +128,7 @@ jobs:
 
   security:
     if: inputs.security-command != ''
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
@@ -145,7 +145,7 @@ jobs:
 
   build:
     if: inputs.build-command != ''
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
     needs: [test]
     defaults:
       run:

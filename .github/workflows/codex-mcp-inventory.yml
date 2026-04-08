@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   codex-mcp-inventory:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
     env:
       INVENTORY_SCOPE: ${{ inputs.inventory_scope || github.event.inputs.inventory_scope }}
     steps:

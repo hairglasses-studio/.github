@@ -90,7 +90,7 @@ concurrency:
 jobs:
   test:
     name: "MCP Test (Go ${{ inputs.go-version }})"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
 
     env:
       CGO_ENABLED: ${{ inputs.cgo-enabled && '1' || '0' }}

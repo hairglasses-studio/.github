@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   codex-pr-risk-summary:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
     env:
       PR_NUMBER: ${{ inputs.pr_number || github.event.inputs.pr_number }}
       FOCUS: ${{ inputs.focus || github.event.inputs.focus }}

@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   codex-release-notes:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, archglasses, optimized]
     env:
       BASE_REF: ${{ inputs.base_ref || github.event.inputs.base_ref }}
       HEAD_REF: ${{ inputs.head_ref || github.event.inputs.head_ref }}
