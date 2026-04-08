@@ -1,0 +1,16 @@
+---
+name: github_org
+description: 'Operate the shared GitHub organization repo for workflow templates, migration guidance, and org-wide automation. Use this when editing shared Actions templates, org policy docs, or sync scripts in this repo, not for per-project feature work.'
+---
+
+# GitHub Org Repo
+
+Use this repo when the change affects shared workflow templates, GitHub migration guidance, or organization-level automation that will later be synchronized into other repositories.
+
+Focus paths:
+- `workflow-templates/`
+- `docs/codex-migration/`
+- `scripts/`
+- `CONTRIBUTING.md`
+
+Keep changes generic across the org. If a change only fits one product repo, make it there instead of here.
