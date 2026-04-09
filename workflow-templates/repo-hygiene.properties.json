@@ -1,4 +1,4 @@
 {
   "name": "Repo Hygiene",
-  "description": "Validate repo metadata and root-doc hygiene with the shared workflow."
+  "description": "Validate repo metadata, root-doc hygiene, and optional whiteclaw rollout block requirements with the shared workflow."
 }

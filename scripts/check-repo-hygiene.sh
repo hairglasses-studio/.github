@@ -2,6 +2,7 @@
 set -euo pipefail
 
 require_roadmap=0
+require_whiteclaw_rollout=0
 require_makefile=0
 require_codeowners=1
 max_root_docs=8
@@ -10,6 +11,7 @@ allow_extra_docs=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --require-roadmap) require_roadmap=1 ;;
+    --require-whiteclaw-rollout) require_whiteclaw_rollout=1 ;;
     --require-makefile) require_makefile=1 ;;
     --no-require-codeowners) require_codeowners=0 ;;
     --max-root-docs)
@@ -53,6 +55,10 @@ require_file ".gemini/settings.json"
 require_dir ".github/workflows"
 
 if [[ "$require_roadmap" -eq 1 ]]; then
+  require_file "ROADMAP.md"
+fi
+
+if [[ "$require_whiteclaw_rollout" -eq 1 ]]; then
   require_file "ROADMAP.md"
 fi
 
@@ -142,6 +148,24 @@ fi
 
 if (( ${#unexpected_docs[@]} > 0 )); then
   fail "Unexpected root markdown files: ${unexpected_docs[*]}"
+fi
+
+if [[ "$require_whiteclaw_rollout" -eq 1 ]]; then
+  start_line="$(grep -n '^<!-- whiteclaw-rollout:start -->$' ROADMAP.md | head -1 | cut -d: -f1)"
+  end_line="$(grep -n '^<!-- whiteclaw-rollout:end -->$' ROADMAP.md | head -1 | cut -d: -f1)"
+  [[ -n "$start_line" ]] || fail "ROADMAP.md is missing <!-- whiteclaw-rollout:start -->"
+  [[ -n "$end_line" ]] || fail "ROADMAP.md is missing <!-- whiteclaw-rollout:end -->"
+  if (( end_line <= start_line )); then
+    fail "Whiteclaw rollout markers are out of order in ROADMAP.md"
+  fi
+
+  block="$(sed -n "${start_line},${end_line}p" ROADMAP.md)"
+  grep -q '^## Whiteclaw-Derived Overhaul ' <<<"$block" || fail "Whiteclaw rollout block must include the overhaul heading"
+  grep -q '^### Strategic Focus$' <<<"$block" || fail "Whiteclaw rollout block must include ### Strategic Focus"
+  grep -q '^### Recommended Work$' <<<"$block" || fail "Whiteclaw rollout block must include ### Recommended Work"
+  grep -q '^### Rationale Snapshot$' <<<"$block" || fail "Whiteclaw rollout block must include ### Rationale Snapshot"
+  grep -q 'Surface baseline:' <<<"$block" || fail "Whiteclaw rollout block must include a Surface baseline line"
+  grep -q 'Whiteclaw transfers in scope:' <<<"$block" || fail "Whiteclaw rollout block must include a Whiteclaw transfers in scope line"
 fi
 
 echo "Repo hygiene checks passed."
