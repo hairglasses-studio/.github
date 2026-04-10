@@ -39,7 +39,6 @@ Production-grade MCP toolkit and desktop automation. Built by [@hairglasses](htt
 | [systemd-mcp](https://github.com/hairglasses-studio/systemd-mcp) | Systemd management MCP server |
 | [tmux-mcp](https://github.com/hairglasses-studio/tmux-mcp) | Tmux multiplexer MCP server |
 | [process-mcp](https://github.com/hairglasses-studio/process-mcp) | Process debugging MCP server |
-| [prompt-improver](https://github.com/hairglasses-studio/prompt-improver) | 13-stage prompt enhancement pipeline |
 
 ## Focus Areas
 

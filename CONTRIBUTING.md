@@ -25,7 +25,7 @@ Use the same committed Codex profile vocabulary across operator repos:
 Policy notes:
 
 - Keep repo-local config minimal and deterministic; personal high-permission overrides belong in user-global Codex config, not checked-in repo config.
-- Only repos that actually own Codex hook automation should commit `[features] codex_hooks = true`. The current allowlist is `docs`, `dotfiles`, and `prompt-improver`.
+- Only repos that actually own Codex hook automation should commit `[features] codex_hooks = true`. The current allowlist is `docs` and `dotfiles`.
 - Structured Codex workflows should prefer artifact-first outputs and use prompt files from the shared `.github/.github/codex/prompts/` tree when possible.
 
 ## Validation
