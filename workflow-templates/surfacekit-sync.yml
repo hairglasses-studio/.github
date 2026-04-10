@@ -1,0 +1,13 @@
+name: Surfacekit Sync
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  surfacekit-sync:
+    uses: hairglasses-studio/.github/.github/workflows/surfacekit-sync.yml@main
+    with:
+      repo-name: ${{ github.event.repository.name }}

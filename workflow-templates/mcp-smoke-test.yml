@@ -1,0 +1,11 @@
+name: MCP Smoke Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    uses: hairglasses-studio/.github/.github/workflows/mcp-smoke-test.yml@main

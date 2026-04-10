@@ -1,0 +1,104 @@
+name: MCP Smoke Test
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "Go version to install"
+        required: false
+        type: string
+        default: "1.26.1"
+      packages:
+        description: "Go packages to smoke test"
+        required: false
+        type: string
+        default: "./..."
+      build-binary:
+        description: "Binary name to build (empty for go build ./...)"
+        required: false
+        type: string
+        default: ""
+      expected-tool-count:
+        description: "Expected MCP tool count (0 to skip the heuristic check)"
+        required: false
+        type: number
+        default: 0
+      cgo-enabled:
+        description: "Enable CGO for repos that require it"
+        required: false
+        type: boolean
+        default: false
+      cgo-cflags:
+        description: "CGO_CFLAGS value"
+        required: false
+        type: string
+        default: ""
+      cgo-ldflags:
+        description: "CGO_LDFLAGS value"
+        required: false
+        type: string
+        default: ""
+      install-system-deps:
+        description: "apt packages to install before the smoke run"
+        required: false
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      go-version:
+        description: "Go version to install"
+        required: false
+        default: "1.26.1"
+        type: string
+      packages:
+        description: "Go packages to smoke test"
+        required: false
+        default: "./..."
+        type: string
+      build-binary:
+        description: "Binary name to build (empty for go build ./...)"
+        required: false
+        default: ""
+        type: string
+      expected-tool-count:
+        description: "Expected MCP tool count (0 to skip the heuristic check)"
+        required: false
+        default: 0
+        type: number
+      cgo-enabled:
+        description: "Enable CGO for repos that require it"
+        required: false
+        default: false
+        type: boolean
+      cgo-cflags:
+        description: "CGO_CFLAGS value"
+        required: false
+        default: ""
+        type: string
+      cgo-ldflags:
+        description: "CGO_LDFLAGS value"
+        required: false
+        default: ""
+        type: string
+      install-system-deps:
+        description: "apt packages to install before the smoke run"
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  smoke:
+    uses: hairglasses-studio/.github/.github/workflows/mcp-test.yml@main
+    with:
+      go-version: ${{ inputs.go-version }}
+      packages: ${{ inputs.packages }}
+      build-binary: ${{ inputs.build-binary }}
+      expected-tool-count: ${{ inputs.expected-tool-count }}
+      cgo-enabled: ${{ inputs.cgo-enabled }}
+      cgo-cflags: ${{ inputs.cgo-cflags }}
+      cgo-ldflags: ${{ inputs.cgo-ldflags }}
+      install-system-deps: ${{ inputs.install-system-deps }}
+      test-flags: "-count=1"
+      timeout: "5m"
+      coverage-threshold: 0
+      integration-test-tags: ""

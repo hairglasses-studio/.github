@@ -1,0 +1,6 @@
+{
+  "name": "MCP Smoke Test",
+  "description": "Run the lightweight shared MCP smoke lane for Go-based MCP servers before full CI expansion.",
+  "iconName": "beaker",
+  "categories": ["Automation", "AI"]
+}

@@ -5,6 +5,7 @@ Use `AGENTS.md` in each repository as the canonical agent and automation contrac
 ## Shared Expectations
 
 - Prefer the reusable workflows in `hairglasses-studio/.github` over bespoke commodity CI.
+- Use `workflow-templates/surfacekit-sync.yml` for shared skill/provider/Codex parity enforcement and `workflow-templates/mcp-smoke-test.yml` for the lightweight MCP smoke lane before adding repo-local variants.
 - Keep repository-root docs focused on durable project docs. Session reports, research dumps, and ad hoc audits belong in `hairglasses-studio/docs` or a repo-local `docs/` directory.
 - For MCP publish repos, treat the standalone repo as a mirror unless the repo-specific docs explicitly say otherwise.
 - Avoid checked-in local artifacts such as `coverage.out`, generated binaries, or machine-specific config.

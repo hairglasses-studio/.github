@@ -1,0 +1,107 @@
+name: Surfacekit Sync
+
+on:
+  workflow_call:
+    inputs:
+      repo-name:
+        description: "Optional repo name override for manifest-backed provider checks"
+        required: false
+        type: string
+        default: ""
+      check-skills:
+        description: "Run the canonical skill surface sync check"
+        required: false
+        type: boolean
+        default: true
+      check-providers:
+        description: "Run the shared Claude/Gemini provider settings check"
+        required: false
+        type: boolean
+        default: true
+      check-codex-mcp:
+        description: "Verify the generated Codex MCP block is current"
+        required: false
+        type: boolean
+        default: true
+      surfacekit-ref:
+        description: "surfacekit ref to use for the sync scripts"
+        required: false
+        type: string
+        default: "main"
+  workflow_dispatch:
+    inputs:
+      repo-name:
+        description: "Optional repo name override for manifest-backed provider checks"
+        required: false
+        default: ""
+        type: string
+      check-skills:
+        description: "Run the canonical skill surface sync check"
+        required: false
+        default: true
+        type: boolean
+      check-providers:
+        description: "Run the shared Claude/Gemini provider settings check"
+        required: false
+        default: true
+        type: boolean
+      check-codex-mcp:
+        description: "Verify the generated Codex MCP block is current"
+        required: false
+        default: true
+        type: boolean
+      surfacekit-ref:
+        description: "surfacekit ref to use for the sync scripts"
+        required: false
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  surfacekit-sync:
+    runs-on: [self-hosted, archglasses, optimized]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Checkout surfacekit
+        uses: actions/checkout@v6
+        with:
+          repository: hairglasses-studio/surfacekit
+          ref: ${{ inputs.surfacekit-ref }}
+          path: .surfacekit
+
+      - name: Check skill surface
+        if: ${{ inputs.check-skills }}
+        run: |
+          bash .surfacekit/scripts/skill-surface-sync.sh "$GITHUB_WORKSPACE" --check
+
+      - name: Check provider settings
+        if: ${{ inputs.check-providers }}
+        env:
+          REPO_NAME_INPUT: ${{ inputs.repo-name }}
+        run: |
+          repo_name="$REPO_NAME_INPUT"
+          if [[ -z "$repo_name" ]]; then
+            repo_name="${GITHUB_REPOSITORY##*/}"
+          fi
+          bash .surfacekit/scripts/provider-settings-sync.sh "$GITHUB_WORKSPACE" --repo-name "$repo_name" --check
+
+      - name: Check Codex MCP block
+        if: ${{ inputs.check-codex-mcp }}
+        shell: bash
+        run: |
+          diff_file=.surfacekit-codex-mcp.diff
+          bash .surfacekit/scripts/codex-mcp-sync.sh "$GITHUB_WORKSPACE" --dry-run | tee "$diff_file"
+          if [[ -s "$diff_file" ]]; then
+            echo "::error::Codex MCP drift detected. Run .surfacekit/scripts/codex-mcp-sync.sh locally and commit the result."
+            exit 1
+          fi
+
+      - name: Upload Codex MCP drift
+        if: ${{ failure() && inputs.check-codex-mcp && hashFiles('.surfacekit-codex-mcp.diff') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: surfacekit-sync-codex-mcp-diff
+          path: .surfacekit-codex-mcp.diff
