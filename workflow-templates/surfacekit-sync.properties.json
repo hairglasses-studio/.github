@@ -1,6 +1,6 @@
 {
   "name": "Surfacekit Sync",
-  "description": "Enforce shared skill, provider-settings, and Codex MCP surface parity with the canonical surfacekit scripts.",
+  "description": "Enforce shared skill, provider-settings, and Codex MCP surface parity through the codexkit bridge, with surfacekit still providing the current runtime scripts.",
   "iconName": "sync",
   "categories": ["Automation", "AI"]
 }

@@ -23,6 +23,11 @@ on:
         required: false
         type: boolean
         default: true
+      codexkit-ref:
+        description: "codexkit ref to use for the bridge commands"
+        required: false
+        type: string
+        default: "main"
       surfacekit-ref:
         description: "surfacekit ref to use for the sync scripts"
         required: false
@@ -50,6 +55,11 @@ on:
         required: false
         default: true
         type: boolean
+      codexkit-ref:
+        description: "codexkit ref to use for the bridge commands"
+        required: false
+        default: "main"
+        type: string
       surfacekit-ref:
         description: "surfacekit ref to use for the sync scripts"
         required: false
@@ -65,6 +75,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Checkout codexkit
+        uses: actions/checkout@v6
+        with:
+          repository: hairglasses-studio/codexkit
+          ref: ${{ inputs.codexkit-ref }}
+          path: .codexkit
+
       - name: Checkout surfacekit
         uses: actions/checkout@v6
         with:
@@ -75,7 +92,8 @@ jobs:
       - name: Check skill surface
         if: ${{ inputs.check-skills }}
         run: |
-          bash .surfacekit/scripts/skill-surface-sync.sh "$GITHUB_WORKSPACE" --check
+          cd .codexkit
+          GOWORK=off go run ./cmd/codexkit bridge skill-surface-check "$GITHUB_WORKSPACE" --surfacekit-root "$GITHUB_WORKSPACE/.surfacekit"
 
       - name: Check provider settings
         if: ${{ inputs.check-providers }}
@@ -86,16 +104,19 @@ jobs:
           if [[ -z "$repo_name" ]]; then
             repo_name="${GITHUB_REPOSITORY##*/}"
           fi
-          bash .surfacekit/scripts/provider-settings-sync.sh "$GITHUB_WORKSPACE" --repo-name "$repo_name" --check
+          cd .codexkit
+          GOWORK=off go run ./cmd/codexkit bridge provider-settings-check "$GITHUB_WORKSPACE" --repo-name "$repo_name" --surfacekit-root "$GITHUB_WORKSPACE/.surfacekit"
 
       - name: Check Codex MCP block
         if: ${{ inputs.check-codex-mcp }}
         shell: bash
         run: |
           diff_file=.surfacekit-codex-mcp.diff
-          bash .surfacekit/scripts/codex-mcp-sync.sh "$GITHUB_WORKSPACE" --dry-run | tee "$diff_file"
+          cd .codexkit
+          GOWORK=off go run ./cmd/codexkit bridge codex-mcp-check "$GITHUB_WORKSPACE" --surfacekit-root "$GITHUB_WORKSPACE/.surfacekit" | tee "$GITHUB_WORKSPACE/$diff_file"
+          cd "$GITHUB_WORKSPACE"
           if [[ -s "$diff_file" ]]; then
-            echo "::error::Codex MCP drift detected. Run .surfacekit/scripts/codex-mcp-sync.sh locally and commit the result."
+            echo "::error::Codex MCP drift detected. Run codexkit bridge codex-mcp-check locally or the canonical surfacekit sync path and commit the result."
             exit 1
           fi
 

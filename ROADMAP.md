@@ -23,7 +23,7 @@ This tranche applies the highest-value whiteclaw findings that fit this repo's r
 
 ### Recommended Work
 - [x] [Workflows] Extend the shared `repo-hygiene` workflow with an opt-in whiteclaw rollout block requirement and prove it in `docs` first.
-- [x] [Workflows] Add reusable `surfacekit-sync` and MCP smoke-test workflow templates so downstream repos can enforce the next rollout tranche through one shared implementation.
+- [x] [Workflows] Add reusable `surfacekit-sync` and MCP smoke-test workflow templates so downstream repos can enforce the next rollout tranche through one shared implementation, with `surfacekit-sync` now entering through `codexkit` while the remaining runtime scripts stay bridged behind it.
 - [ ] [Templates] Promote the docs-side engineer-brief, prompt/runbook, and repo-surface templates into shared org workflow/template consumption paths.
 - [ ] [Drift] Add a workflow that fails when public or active repos drift from the org instruction, roadmap, or manifest contract.
 - [ ] [Policy] Document when a repo should get a local `.mcp.json`, a local skill, a prompt/runbook pack, or only archive-safe provenance updates.
