@@ -1,0 +1,6 @@
+{
+  "name": "Codexkit Parity",
+  "description": "Enforce shared skill, provider-settings, and Codex MCP surface parity through codexkit-owned parity tooling, with skill and MCP checks auto-skipped when a repo does not carry those inputs.",
+  "iconName": "sync",
+  "categories": ["Automation", "AI"]
+}

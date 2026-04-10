@@ -1,6 +1,6 @@
 {
-  "name": "Surfacekit Sync",
-  "description": "Enforce shared skill, provider-settings, and Codex MCP surface parity through the codexkit bridge, with surfacekit still providing the current runtime scripts.",
+  "name": "Surfacekit Sync (Compatibility)",
+  "description": "Compatibility alias for the codexkit parity workflow. Prefer codexkit-parity for new repos.",
   "iconName": "sync",
   "categories": ["Automation", "AI"]
 }

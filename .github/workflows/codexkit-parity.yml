@@ -1,0 +1,141 @@
+name: Codexkit Parity
+
+on:
+  workflow_call:
+    inputs:
+      repo-name:
+        description: "Optional repo name override for manifest-backed provider checks"
+        required: false
+        type: string
+        default: ""
+      check-skills:
+        description: "Run the canonical skill surface sync check"
+        required: false
+        type: boolean
+        default: true
+      check-providers:
+        description: "Run the shared Claude/Gemini provider settings check"
+        required: false
+        type: boolean
+        default: true
+      check-codex-mcp:
+        description: "Verify the generated Codex MCP block is current"
+        required: false
+        type: boolean
+        default: true
+      codexkit-ref:
+        description: "codexkit ref to use for parity commands"
+        required: false
+        type: string
+        default: "main"
+  workflow_dispatch:
+    inputs:
+      repo-name:
+        description: "Optional repo name override for manifest-backed provider checks"
+        required: false
+        default: ""
+        type: string
+      check-skills:
+        description: "Run the canonical skill surface sync check"
+        required: false
+        default: true
+        type: boolean
+      check-providers:
+        description: "Run the shared Claude/Gemini provider settings check"
+        required: false
+        default: true
+        type: boolean
+      check-codex-mcp:
+        description: "Verify the generated Codex MCP block is current"
+        required: false
+        default: true
+        type: boolean
+      codexkit-ref:
+        description: "codexkit ref to use for parity commands"
+        required: false
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  codexkit-parity:
+    runs-on: [self-hosted, archglasses, optimized]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Checkout codexkit
+        uses: actions/checkout@v6
+        with:
+          repository: hairglasses-studio/codexkit
+          ref: ${{ inputs.codexkit-ref }}
+          path: .codexkit
+
+      - name: Check skill surface
+        if: ${{ inputs.check-skills && hashFiles('.agents/skills/surface.yaml') != '' }}
+        run: |
+          cd .codexkit
+          GOWORK=off go run ./cmd/codexkit skills check "$GITHUB_WORKSPACE"
+
+      - name: Check provider settings
+        if: ${{ inputs.check-providers }}
+        env:
+          REPO_NAME_INPUT: ${{ inputs.repo-name }}
+        run: |
+          repo_name="$REPO_NAME_INPUT"
+          if [[ -z "$repo_name" ]]; then
+            repo_name="${GITHUB_REPOSITORY##*/}"
+          fi
+          cd .codexkit
+          GOWORK=off go run ./cmd/codexkit provider check "$GITHUB_WORKSPACE" --repo-name "$repo_name"
+
+      - name: Check Codex MCP block
+        if: ${{ inputs.check-codex-mcp && hashFiles('.mcp.json') != '' && hashFiles('.codex/config.toml') != '' }}
+        shell: bash
+        run: |
+          set -o pipefail
+          diff_file=.codexkit-parity-codex-mcp.diff
+          cd .codexkit
+          GOWORK=off go run ./cmd/codexkit mcp check "$GITHUB_WORKSPACE" | tee "$GITHUB_WORKSPACE/$diff_file"
+          cd "$GITHUB_WORKSPACE"
+          if [[ -s "$diff_file" ]]; then
+            echo "::error::Codex MCP drift detected. Run codexkit mcp diff locally and commit the result."
+            exit 1
+          fi
+
+      - name: Collect parity drift artifacts
+        if: ${{ failure() }}
+        shell: bash
+        env:
+          REPO_NAME_INPUT: ${{ inputs.repo-name }}
+          CHECK_SKILLS: ${{ inputs.check-skills }}
+          CHECK_PROVIDERS: ${{ inputs.check-providers }}
+          CHECK_CODEX_MCP: ${{ inputs.check-codex-mcp }}
+        run: |
+          set -euo pipefail
+          repo_name="$REPO_NAME_INPUT"
+          if [[ -z "$repo_name" ]]; then
+            repo_name="${GITHUB_REPOSITORY##*/}"
+          fi
+          cd .codexkit
+          if [[ "$CHECK_SKILLS" == "true" && -f "$GITHUB_WORKSPACE/.agents/skills/surface.yaml" ]]; then
+            GOWORK=off go run ./cmd/codexkit skills diff "$GITHUB_WORKSPACE" > "$GITHUB_WORKSPACE/.codexkit-parity-skills.json" || true
+          fi
+          if [[ "$CHECK_PROVIDERS" == "true" ]]; then
+            GOWORK=off go run ./cmd/codexkit provider diff "$GITHUB_WORKSPACE" --repo-name "$repo_name" > "$GITHUB_WORKSPACE/.codexkit-parity-provider.txt" 2>&1 || true
+          fi
+          if [[ "$CHECK_CODEX_MCP" == "true" && -f "$GITHUB_WORKSPACE/.mcp.json" && -f "$GITHUB_WORKSPACE/.codex/config.toml" && ! -e "$GITHUB_WORKSPACE/.codexkit-parity-codex-mcp.diff" ]]; then
+            GOWORK=off go run ./cmd/codexkit mcp diff "$GITHUB_WORKSPACE" > "$GITHUB_WORKSPACE/.codexkit-parity-codex-mcp.diff" || true
+          fi
+
+      - name: Upload parity drift artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: codexkit-parity-drift
+          if-no-files-found: ignore
+          path: |
+            .codexkit-parity-skills.json
+            .codexkit-parity-provider.txt
+            .codexkit-parity-codex-mcp.diff

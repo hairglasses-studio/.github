@@ -1,4 +1,4 @@
-name: Surfacekit Sync
+name: Surfacekit Sync (Compatibility)
 
 on:
   workflow_call:
@@ -24,12 +24,12 @@ on:
         type: boolean
         default: true
       codexkit-ref:
-        description: "codexkit ref to use for the bridge commands"
+        description: "codexkit ref to use for parity commands"
         required: false
         type: string
         default: "main"
       surfacekit-ref:
-        description: "surfacekit ref to use for the sync scripts"
+        description: "Deprecated compatibility input. surfacekit is no longer required at runtime."
         required: false
         type: string
         default: "main"
@@ -56,12 +56,12 @@ on:
         default: true
         type: boolean
       codexkit-ref:
-        description: "codexkit ref to use for the bridge commands"
+        description: "codexkit ref to use for parity commands"
         required: false
         default: "main"
         type: string
       surfacekit-ref:
-        description: "surfacekit ref to use for the sync scripts"
+        description: "Deprecated compatibility input. surfacekit is no longer required at runtime."
         required: false
         default: "main"
         type: string
@@ -71,58 +71,10 @@ permissions:
 
 jobs:
   surfacekit-sync:
-    runs-on: [self-hosted, archglasses, optimized]
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Checkout codexkit
-        uses: actions/checkout@v6
-        with:
-          repository: hairglasses-studio/codexkit
-          ref: ${{ inputs.codexkit-ref }}
-          path: .codexkit
-
-      - name: Checkout surfacekit
-        uses: actions/checkout@v6
-        with:
-          repository: hairglasses-studio/surfacekit
-          ref: ${{ inputs.surfacekit-ref }}
-          path: .surfacekit
-
-      - name: Check skill surface
-        if: ${{ inputs.check-skills }}
-        run: |
-          cd .codexkit
-          GOWORK=off go run ./cmd/codexkit bridge skill-surface-check "$GITHUB_WORKSPACE" --surfacekit-root "$GITHUB_WORKSPACE/.surfacekit"
-
-      - name: Check provider settings
-        if: ${{ inputs.check-providers }}
-        env:
-          REPO_NAME_INPUT: ${{ inputs.repo-name }}
-        run: |
-          repo_name="$REPO_NAME_INPUT"
-          if [[ -z "$repo_name" ]]; then
-            repo_name="${GITHUB_REPOSITORY##*/}"
-          fi
-          cd .codexkit
-          GOWORK=off go run ./cmd/codexkit bridge provider-settings-check "$GITHUB_WORKSPACE" --repo-name "$repo_name" --surfacekit-root "$GITHUB_WORKSPACE/.surfacekit"
-
-      - name: Check Codex MCP block
-        if: ${{ inputs.check-codex-mcp }}
-        shell: bash
-        run: |
-          diff_file=.surfacekit-codex-mcp.diff
-          cd .codexkit
-          GOWORK=off go run ./cmd/codexkit bridge codex-mcp-check "$GITHUB_WORKSPACE" --surfacekit-root "$GITHUB_WORKSPACE/.surfacekit" | tee "$GITHUB_WORKSPACE/$diff_file"
-          cd "$GITHUB_WORKSPACE"
-          if [[ -s "$diff_file" ]]; then
-            echo "::error::Codex MCP drift detected. Run codexkit bridge codex-mcp-check locally or the canonical surfacekit sync path and commit the result."
-            exit 1
-          fi
-
-      - name: Upload Codex MCP drift
-        if: ${{ failure() && inputs.check-codex-mcp && hashFiles('.surfacekit-codex-mcp.diff') != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: surfacekit-sync-codex-mcp-diff
-          path: .surfacekit-codex-mcp.diff
+    uses: ./.github/workflows/codexkit-parity.yml
+    with:
+      repo-name: ${{ inputs.repo-name }}
+      check-skills: ${{ inputs.check-skills }}
+      check-providers: ${{ inputs.check-providers }}
+      check-codex-mcp: ${{ inputs.check-codex-mcp }}
+      codexkit-ref: ${{ inputs.codexkit-ref }}

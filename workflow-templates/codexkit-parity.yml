@@ -1,4 +1,4 @@
-name: Surfacekit Sync (Compatibility)
+name: Codexkit Parity
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  surfacekit-sync:
-    uses: hairglasses-studio/.github/.github/workflows/surfacekit-sync.yml@main
+  codexkit-parity:
+    uses: hairglasses-studio/.github/.github/workflows/codexkit-parity.yml@main
     with:
       repo-name: ${{ github.event.repository.name }}
