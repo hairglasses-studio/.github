@@ -474,13 +474,6 @@
       "visibility": "PRIVATE",
       "lifecycle": "maintenance-only",
       "source_of_truth": "self"
-    },
-    {
-      "name": "ollama",
-      "ci_profile": "repo-hygiene",
-      "visibility": "PRIVATE",
-      "lifecycle": "active",
-      "source_of_truth": "self"
     }
   ]
 }
