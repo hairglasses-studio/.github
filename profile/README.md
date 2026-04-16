@@ -6,44 +6,41 @@
 ![MCP](https://img.shields.io/badge/MCP-2025--11--25-8A2BE2)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Production Go tooling for MCP servers, AI agent infrastructure, and desktop automation.
-
-Production-grade MCP toolkit and desktop automation. Built by [@hairglasses](https://github.com/hairglasses).
+Production Go tooling for MCP servers, AI agent infrastructure, and desktop automation. Built by [@hairglasses](https://github.com/hairglasses).
 
 ## Key Repos
 
 | Repo | Description |
 |------|-------------|
-| [mcpkit](https://github.com/hairglasses-studio/mcpkit) | Production Go toolkit for MCP servers, middleware, workflows, and evaluation. |
-| [ralphglasses](https://github.com/hairglasses-studio/ralphglasses) | Multi-LLM orchestration TUI for Claude, Gemini, and Codex sessions. |
-| [dotfiles](https://github.com/hairglasses-studio/dotfiles) | Desktop automation, Hyprland/macOS environment management, and large MCP surfaces. |
-| [claudekit](https://github.com/hairglasses-studio/claudekit) | Agent and terminal customization framework for Claude Code and Codex workflows. |
+| [mcpkit](https://github.com/hairglasses-studio/mcpkit) | Production Go MCP toolkit — 72 packages, A2A bridge, multi-protocol gateway, 85%+ coverage |
+| [ralphglasses](https://github.com/hairglasses-studio/ralphglasses) | Multi-LLM orchestration TUI — parallel Claude/Gemini/Codex sessions, 222 MCP tools |
+| [dotfiles](https://github.com/hairglasses-studio/dotfiles) | Desktop config — 157 GLSL shaders, Hyprland/Sway, 1,400+ MCP tools |
+| [python-marathon](https://github.com/hairglasses-studio/python-marathon) | Rustlings-style Python interview prep — 61+ exercises, pytest CLI runner |
 
 ### Architecture
 
-**[ralphglasses](https://github.com/hairglasses-studio/ralphglasses)** -- Multi-LLM agent orchestration TUI. Manages parallel Claude, Gemini, and Codex sessions from a single k9s-style interface with 126 MCP tools. Built with [Charmbracelet](https://github.com/charmbracelet) (BubbleTea + Lip Gloss).
+**[mcpkit](https://github.com/hairglasses-studio/mcpkit)** — Production Go framework for MCP servers. 72 packages across 4 dependency layers: typed handlers, composable middleware, JWT/OAuth/DPoP auth, circuit breakers, FinOps budgeting, workflow engine with checkpointing, bidirectional MCP-A2A bridge, and multi-protocol gateway.
 
-**[dotfiles](https://github.com/hairglasses-studio/dotfiles)** -- Cyberpunk desktop rice with 138+ GLSL shaders, 1,400+ MCP tools (7 Go + 3 JS servers), Hyprland compositor abstraction, and eww status bars.
+**[ralphglasses](https://github.com/hairglasses-studio/ralphglasses)** — Multi-LLM agent orchestration TUI. Manages parallel Claude, Gemini, and Codex sessions from a k9s-style interface with 222 MCP tools, cost tracking, and budget enforcement. Built with [Charmbracelet](https://github.com/charmbracelet) (BubbleTea + Lip Gloss).
 
-**[claudekit](https://github.com/hairglasses-studio/claudekit)** -- Claude Code terminal customization framework: themes, hooks, skills, and agent configuration.
+**[dotfiles](https://github.com/hairglasses-studio/dotfiles)** — Cyberpunk desktop rice with 157 GLSL shaders, 1,400+ MCP tools (7 Go + 3 JS servers), Hyprland compositor abstraction, and eww status bars.
 
 ## All Repositories
 
 | Repo | Description |
 |------|-------------|
-| [mcpkit](https://github.com/hairglasses-studio/mcpkit) | Production Go MCP toolkit (35+ packages, 700+ tests) |
-| [ralphglasses](https://github.com/hairglasses-studio/ralphglasses) | Multi-LLM agent orchestration TUI (126 MCP tools) |
-| [claudekit](https://github.com/hairglasses-studio/claudekit) | Claude Code terminal customization framework |
-| [dotfiles](https://github.com/hairglasses-studio/dotfiles) | Desktop config, 138+ GLSL shaders, 1,400+ MCP tools |
-| [dotfiles-mcp](https://github.com/hairglasses-studio/dotfiles-mcp) | Desktop environment MCP server (82 tools) |
+| [mcpkit](https://github.com/hairglasses-studio/mcpkit) | Production Go MCP toolkit (72 packages, 85%+ coverage) |
+| [ralphglasses](https://github.com/hairglasses-studio/ralphglasses) | Multi-LLM agent orchestration TUI (222 MCP tools) |
+| [dotfiles](https://github.com/hairglasses-studio/dotfiles) | Desktop config, 157 GLSL shaders, 1,400+ MCP tools |
+| [python-marathon](https://github.com/hairglasses-studio/python-marathon) | Rustlings-style Python interview prep (61+ exercises) |
 | [systemd-mcp](https://github.com/hairglasses-studio/systemd-mcp) | Systemd management MCP server |
 | [tmux-mcp](https://github.com/hairglasses-studio/tmux-mcp) | Tmux multiplexer MCP server |
 | [process-mcp](https://github.com/hairglasses-studio/process-mcp) | Process debugging MCP server |
 
 ## Focus Areas
 
-- **MCP servers** -- Go-native servers built on mcpkit, covering desktop automation, system management, and developer tooling
-- **Agent orchestration** -- Multi-provider LLM fleet management with cost tracking and parallel execution
-- **Desktop automation** -- Hyprland/Wayland control, GLSL shader pipelines, input device management via MCP
+- **MCP servers** — Go-native servers built on mcpkit, covering desktop automation, system management, and developer tooling
+- **Agent orchestration** — Multi-provider LLM fleet management with cost tracking and parallel execution
+- **Desktop automation** — Hyprland/Wayland control, GLSL shader pipelines, input device management via MCP
 
 All Go projects target Go 1.26+ and follow the [MCP 2025-11-25 specification](https://modelcontextprotocol.io/specification/2025-11-25).
