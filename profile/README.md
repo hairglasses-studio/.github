@@ -36,6 +36,7 @@ Production Go tooling for MCP servers, AI agent infrastructure, and desktop auto
 | [systemd-mcp](https://github.com/hairglasses-studio/systemd-mcp) | Systemd management MCP server |
 | [tmux-mcp](https://github.com/hairglasses-studio/tmux-mcp) | Tmux multiplexer MCP server |
 | [process-mcp](https://github.com/hairglasses-studio/process-mcp) | Process debugging MCP server |
+| [codexkit](https://github.com/hairglasses-studio/codexkit) | Fleet management toolkit — baseline validation, skill sync, 12 MCP tools |
 
 ## Focus Areas
 
