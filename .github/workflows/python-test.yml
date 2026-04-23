@@ -79,7 +79,7 @@ jobs:
       - name: Set up Python 3.11 via uv
         run: |
           uv python install 3.11
-          uv venv .venv --python 3.11
+          uv venv .venv --python 3.11 --seed
           echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
           echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install dependencies
@@ -104,7 +104,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }} via uv
         run: |
           uv python install ${{ matrix.python-version }}
-          uv venv .venv --python ${{ matrix.python-version }}
+          uv venv .venv --python ${{ matrix.python-version }} --seed
           echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
           echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install Linux system packages
@@ -141,7 +141,7 @@ jobs:
       - name: Set up Python 3.11 via uv
         run: |
           uv python install 3.11
-          uv venv .venv --python 3.11
+          uv venv .venv --python 3.11 --seed
           echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
           echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install dependencies
@@ -161,7 +161,7 @@ jobs:
       - name: Set up Python 3.11 via uv
         run: |
           uv python install 3.11
-          uv venv .venv --python 3.11
+          uv venv .venv --python 3.11 --seed
           echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
           echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install dependencies
