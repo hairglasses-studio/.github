@@ -79,8 +79,9 @@ jobs:
       - name: Set up Python 3.11 via uv
         run: |
           uv python install 3.11
-          UV_PYTHON_BIN="$(uv python find 3.11 | xargs dirname)"
-          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
+          uv venv .venv --python 3.11
+          echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install dependencies
         run: ${{ inputs.install-command }}
       - name: Lint
@@ -103,8 +104,9 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }} via uv
         run: |
           uv python install ${{ matrix.python-version }}
-          UV_PYTHON_BIN="$(uv python find ${{ matrix.python-version }} | xargs dirname)"
-          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
+          uv venv .venv --python ${{ matrix.python-version }}
+          echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install Linux system packages
         if: runner.os == 'Linux' && inputs.install-system-deps-linux != ''
         run: |
@@ -139,8 +141,9 @@ jobs:
       - name: Set up Python 3.11 via uv
         run: |
           uv python install 3.11
-          UV_PYTHON_BIN="$(uv python find 3.11 | xargs dirname)"
-          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
+          uv venv .venv --python 3.11
+          echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install dependencies
         run: ${{ inputs.install-command }}
       - name: Security
@@ -158,8 +161,9 @@ jobs:
       - name: Set up Python 3.11 via uv
         run: |
           uv python install 3.11
-          UV_PYTHON_BIN="$(uv python find 3.11 | xargs dirname)"
-          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
+          uv venv .venv --python 3.11
+          echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> "$GITHUB_ENV"
       - name: Install dependencies
         run: ${{ inputs.install-command }}
       - name: Build
