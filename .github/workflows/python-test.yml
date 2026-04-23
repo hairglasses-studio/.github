@@ -76,10 +76,11 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
+      - name: Set up Python 3.11 via uv
+        run: |
+          uv python install 3.11
+          UV_PYTHON_BIN="$(uv python find 3.11 | xargs dirname)"
+          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
       - name: Install dependencies
         run: ${{ inputs.install-command }}
       - name: Lint
@@ -99,10 +100,11 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
+      - name: Set up Python ${{ matrix.python-version }} via uv
+        run: |
+          uv python install ${{ matrix.python-version }}
+          UV_PYTHON_BIN="$(uv python find ${{ matrix.python-version }} | xargs dirname)"
+          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
       - name: Install Linux system packages
         if: runner.os == 'Linux' && inputs.install-system-deps-linux != ''
         run: |
@@ -134,10 +136,11 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
+      - name: Set up Python 3.11 via uv
+        run: |
+          uv python install 3.11
+          UV_PYTHON_BIN="$(uv python find 3.11 | xargs dirname)"
+          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
       - name: Install dependencies
         run: ${{ inputs.install-command }}
       - name: Security
@@ -152,10 +155,11 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
+      - name: Set up Python 3.11 via uv
+        run: |
+          uv python install 3.11
+          UV_PYTHON_BIN="$(uv python find 3.11 | xargs dirname)"
+          echo "$UV_PYTHON_BIN" >> "$GITHUB_PATH"
       - name: Install dependencies
         run: ${{ inputs.install-command }}
       - name: Build
